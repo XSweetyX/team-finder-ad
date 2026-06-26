@@ -1,18 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.http import JsonResponse
-from django.core.paginator import Paginator
+
 from .models import Project
 from .forms import ProjectForm
+from utils.func_utils import get_page
 
 
 def project_list(request):
-    projects = Project.objects.select_related("owner").all().order_by("-created_at")
+    projects = Project.objects.select_related("owner").all()
 
-    paginator = Paginator(projects, 12)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_page(projects,request)
 
 
     return render(request, "projects/project_list.html", {
@@ -22,30 +22,25 @@ def project_list(request):
 
 @login_required
 def favorite_projects(request):
-    projects = request.user.favorites.select_related("owner").all().order_by("-created_at")
+    projects = request.user.favorites.select_related("owner").all()
 
-    paginator = Paginator(projects, 12)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    page_obj = get_page(projects,request)
 
-    return render(request, "projects/favorite_projects.html", {"projects": page_obj})
+    return render(request, "projects/favorite_projects.html", {"projects": page_obj, "page_obj": page_obj,})
 
 
 @login_required
+@require_POST
 def toggle_favorite(request, project_id):
-    if request.method != "POST":
-        return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
-
     project = get_object_or_404(Project, pk=project_id)
-
-    if project in request.user.favorites.all():
+    favorited = request.user.favorites.filter(pk=project.pk).exists()
+    if favorited:
         request.user.favorites.remove(project)
-        favorited = False
     else:
         request.user.favorites.add(project)
-        favorited = True
+        
 
-    return JsonResponse({"status": "ok", "favorited": favorited})
+    return JsonResponse({"status": "ok", "favorited": not favorited,})
 
 
 def project_details(request, project_id):
@@ -68,68 +63,80 @@ def project_details(request, project_id):
 
 @login_required
 def create_project(request):
-    if request.method == "POST":
-        form = ProjectForm(request.POST)
-        if form.is_valid():
-            project = form.save(commit=False)
-            project.owner = request.user
-            project.save()
-            project.participants.add(request.user)
-            messages.success(request, "Проект успешно создан!")
-            return redirect("projects:details", project_id=project.pk)
-    else:
-        form = ProjectForm()
+    form = ProjectForm(request.POST or None)   
 
-    return render(request, "projects/create-project.html", {"form": form, "is_edit": False})
+    if form :
+        if not form.is_valid():   
+            return render(request, "projects/create-project.html", {
+                "form": form,
+                "is_edit": False
+            })
+
+        project = form.save(commit=False)
+        project.owner = request.user
+        project.save()
+        project.participants.add(request.user)
+        messages.success(request, "Проект успешно создан!")
+        return redirect("projects:details", project_id=project.pk)
+
+    
+    return render(request, "projects/create-project.html", {
+        "form": form,
+        "is_edit": False
+    })
 
 
 @login_required
 def edit_project(request, project_id):
     project = get_object_or_404(Project, pk=project_id, owner=request.user)
+    form = ProjectForm(request.POST or None, instance=project)
 
-    if request.method == "POST":
-        form = ProjectForm(request.POST, instance=project)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Проект успешно обновлен!")
-            return redirect("projects:details", project_id=project.pk)
-    else:
-        form = ProjectForm(instance=project)
+    if form:
+        if not form.is_valid():
+            return render(request, "projects/create-project.html", {
+                "form": form,
+                "is_edit": True,
+            })
 
-    return render(request, "projects/create-project.html", {"form": form, "is_edit": True})
+    
+        form.save()
+        messages.success(request, "Проект успешно обновлен!")
+        return redirect("projects:details", project_id=project.pk)
+
+    return render(request, "projects/create-project.html", {
+        "form": form,
+        "is_edit": True,
+    })
 
 
 @login_required
+@require_POST
 def complete_project(request, project_id):
-    if request.method != "POST":
-        return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
-
     project = get_object_or_404(Project, pk=project_id, owner=request.user)
 
-    if project.status == "open":
-        project.status = "closed"
+    if project.is_open:
+        project.status = project.STATUS_CLOSED
         project.save()
-        return JsonResponse({"status": "ok", "project_status": "closed"})
+        return JsonResponse({"status": "ok", "project_status": project.status})
 
     return JsonResponse({"status": "error", "message": "Project is already closed"}, status=400)
 
 
 @login_required
-def toggle_participate(request, pk):
-    project = get_object_or_404(Project, pk=pk)
+def toggle_participate(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
     
-    # Проверяем, является ли пользователь участником
-    is_currently_participant = request.user in project.participants.all()
+    is_currently_participant = project.participants.filter(pk=request.user.pk).exists()
     
     if is_currently_participant:
         project.participants.remove(request.user)
-        participant = False
     else:
         project.participants.add(request.user)
-        participant = True
+       
     
     return JsonResponse({
         'status': 'ok',
-        'participant': participant,           # ← именно это ожидает твой JS
-        'participants_count': project.participants.count()
+        'participant': not is_currently_participant,           
+        'participants_count': project.participants.count(),
     })
+

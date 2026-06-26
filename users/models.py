@@ -1,11 +1,18 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.db import models
-from django.utils import timezone
 import random
 from PIL import Image, ImageDraw,ImageFont
 from io import BytesIO
-from django.core.files.base import ContentFile
 from pathlib import Path
+
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import models
+from django.utils import timezone
+from django.core.files.base import ContentFile
+from django.utils.translation import gettext_lazy as _
+
+from constants import colors, AVATAR_MODE, AVATAR_SIZE, FORM_MAX_LENGTH,\
+ USER_MODEL_NAME_MAX_LENGTH, USER_MODEL_SURNAME_MAX_LENGTH, USER_MODEL_PHONE_NUMBER_MAX_LENGTH,\
+ USER_MODEL_ABOUT_MAX_LENGTH, USER_MODEL_EMAIL_MAX_LENGTH, FONT_SIZE
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -37,22 +44,18 @@ def generate_avatar(name, surname):
     """Generate avatar with first letter of name on colored background"""
     initial = (name[0] if name else surname[0] if surname else "U").upper()
     
-    colors = [
-        (100, 149, 237), (144, 238, 144), (255, 182, 193),
-        (255, 218, 185), (221, 160, 221), (176, 224, 230),
-        (240, 230, 140), (255, 160, 122),
-    ]
+    
     bg_color = random.choice(colors)
     
-    img = Image.new("RGB", (200, 200), color=bg_color)
+    img = Image.new(AVATAR_MODE, AVATAR_SIZE, color=bg_color)
     draw = ImageDraw.Draw(img)
     
     font_path = BASE_DIR / "static" / "fonts" / "Neue_Haas_Grotesk_Display_Pro_75_Bold.otf"
     try:
-        font = ImageFont.truetype(str(font_path), 80)
+        font = ImageFont.truetype(str(font_path), FONT_SIZE)
     except:
         try:
-            font = ImageFont.truetype("arial.ttf", 80)
+            font = ImageFont.truetype("arial.ttf", FONT_SIZE)
         except:
             font = ImageFont.load_default()
     
@@ -60,8 +63,8 @@ def generate_avatar(name, surname):
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
     
-    x = (200 - text_width) // 2
-    y = (200 - text_height) // 2
+    x = (AVATAR_SIZE[0] - text_width) // 2
+    y = (AVATAR_SIZE[1] - text_height) // 2
     
     draw.text((x, y), initial, fill="white", font=font)
     
@@ -73,22 +76,61 @@ def generate_avatar(name, surname):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(unique=True, max_length=254)
-    name = models.CharField(max_length=124)
-    surname = models.CharField(max_length=124)
-    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
-    phone = models.CharField(max_length=12, unique=True, blank=True, null=True)
-    github_url = models.URLField(blank=True, null=True)
-    about = models.TextField(max_length=256, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    email = models.EmailField(
+        unique=True, 
+        max_length=USER_MODEL_EMAIL_MAX_LENGTH,
+        verbose_name=_("Электронная почта")
+    )
+    name = models.CharField(
+        max_length=USER_MODEL_NAME_MAX_LENGTH,
+        verbose_name=_("Имя")
+    )
+    surname = models.CharField(
+        max_length=USER_MODEL_SURNAME_MAX_LENGTH,
+        verbose_name=_("Фамилия")
+    )
+    avatar = models.ImageField(
+        upload_to="avatars/", 
+        blank=True, 
+        null=True,
+        verbose_name=_("Аватар")
+    )
+    phone = models.CharField(
+        max_length=USER_MODEL_PHONE_NUMBER_MAX_LENGTH, 
+        unique=True, 
+        blank=True, 
+        null=True,
+        verbose_name=_("Номер телефона")
+    )
+    github_url = models.URLField(
+        blank=True, 
+        null=True,
+        verbose_name=_("Ссылка на GitHub")
+    )
+    about = models.TextField(
+        max_length=USER_MODEL_ABOUT_MAX_LENGTH, 
+        blank=True, 
+        null=True,
+        verbose_name=_("О себе")
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("Активен")
+    )
+    is_staff = models.BooleanField(
+        default=False,
+        verbose_name=_("Статус персонала")
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("Дата регистрации")
+    )
 
     favorites = models.ManyToManyField(
         "projects.Project",
         related_name="interested_users",
         blank=True,
-        verbose_name="Favorite projects"
+        verbose_name=_("Избранные проекты")
     )
 
     objects = UserManager()
@@ -97,8 +139,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["name", "surname"]
 
     class Meta:
-        verbose_name = "User"
-        verbose_name_plural = "Users"
+        verbose_name = _("Пользователь")
+        verbose_name_plural = _("Пользователи")
         ordering = ["-created_at"]
 
     def __str__(self):
@@ -129,9 +171,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f"{self.name} {self.surname}"
 
     @property
-    def owned_projects(self):
-        return self.project_set.all()
+    def owned_projects(self):     
+        return self.owned_projects.all() 
 
     @property
     def participated_projects(self):
-        return self.participated_projects.all()
+        return self.participated_projects.all() 
+

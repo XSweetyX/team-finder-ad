@@ -1,4 +1,5 @@
 from django.urls import path
+
 from . import views
 
 app_name = "projects"
@@ -11,5 +12,6 @@ urlpatterns = [
     path("create-project/", views.create_project, name="create"),
     path("<int:project_id>/edit/", views.edit_project, name="edit"),
     path("<int:project_id>/complete/", views.complete_project, name="complete"),
-    path('<int:pk>/toggle-participate/', views.toggle_participate, name='toggle_participate')
+    path('<int:project_id>/toggle-participate/', views.toggle_participate, name='toggle_participate')
 ]
+

@@ -1,40 +1,111 @@
 from django.db import models
+
 from django.conf import settings
+
+from django.utils.translation import gettext_lazy as _
+
+
+from constants import PROJECT_MODEL_NAME_MAX_LENGTH, STATUS_MAX_LENGTH
+
+
 
 
 class Project(models.Model):
+
+    STATUS_OPEN = "open"
+
+    STATUS_CLOSED = "closed"
+
+
     STATUS_CHOICES = [
-        ("open", "Open"),
-        ("closed", "Closed"),
+
+        (STATUS_OPEN, _("Открыт")),      
+
+        (STATUS_CLOSED, _("Закрыт")),   
+
     ]
 
-    name = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)
+
+    name = models.CharField(
+
+        max_length=PROJECT_MODEL_NAME_MAX_LENGTH,      
+
+        verbose_name=_("Название проекта") 
+    )
+
+    description = models.TextField(
+
+        blank=True,
+        null=True,
+
+        verbose_name=_("Описание")
+    )
+
     owner = models.ForeignKey(
+
         settings.AUTH_USER_MODEL,
+
         on_delete=models.CASCADE,
-        related_name="owned_projects"
+
+        related_name="owned_projects",
+
+        verbose_name=_("Владелец проекта")
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    github_url = models.URLField(blank=True, null=True)
-    status = models.CharField(max_length=6, choices=STATUS_CHOICES, default="open")
+
+    created_at = models.DateTimeField(
+
+        auto_now_add=True,
+
+        verbose_name=_("Дата создания")
+    )
+
+    github_url = models.URLField(
+
+        blank=True,
+        null=True,
+
+        verbose_name=_("Ссылка на GitHub")
+    )
+
+    status = models.CharField(
+
+        max_length=STATUS_MAX_LENGTH,     
+
+        choices=STATUS_CHOICES,
+
+        default=STATUS_OPEN,              
+
+        verbose_name=_("Статус")
+    )
+
     participants = models.ManyToManyField(
+
         settings.AUTH_USER_MODEL,
+
         related_name="participated_projects",
-        blank=True
+
+        blank=True,
+
+        verbose_name=_("Участники")
     )
+
 
     class Meta:
-        verbose_name = "Project"
-        verbose_name_plural = "Projects"
+
+        verbose_name = _("Проект")         
+
+        verbose_name_plural = _("Проекты") 
+
         ordering = ["-created_at"]
-        indexes = [
-            models.Index(fields=["-created_at"]),
-            models.Index(fields=["status"]),
-        ]
+
 
     def __str__(self):
+
         return self.name
 
+
     def is_open(self):
-        return self.status == "open"
+
+        return self.status == self.STATUS_OPEN
+
+
