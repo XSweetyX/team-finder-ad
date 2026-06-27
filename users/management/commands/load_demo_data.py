@@ -53,4 +53,3 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Успешно создано 3 пользователя и 5 проектов!'))
         self.stdout.write('Пароль для всех тестовых аккаунтов: test123')
-

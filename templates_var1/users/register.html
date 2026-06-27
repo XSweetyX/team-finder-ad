@@ -12,17 +12,46 @@
     <h2>Регистрация</h2>
     <form method="post">
         {% csrf_token %}
+
         <div class="name-fields">
-            <div>{{ form.name.label_tag }} {{ form.name }}</div>
-            <div>{{ form.surname.label_tag }} {{ form.surname }}</div>
+            <div>
+                {{ form.name.label_tag }}
+                {{ form.name }}
+            </div>
+            <div>
+                {{ form.surname.label_tag }}
+                {{ form.surname }}
+            </div>
         </div>
-        {{ form.email.label_tag }} {{ form.email }}
-        {{ form.password.label_tag }} {{ form.password }}
-        {% for error in form.errors.values %}
-        <p style="color: red;">{{error}}</p>
+
+        <div>
+            {{ form.email.label_tag }}
+            {{ form.email }}
+        </div>
+
+        <div>
+            {{ form.password1.label_tag }}
+            {{ form.password1 }}
+        </div>
+
+        <div>
+            {{ form.password2.label_tag }}
+            {{ form.password2 }}
+        </div>
+
+        {% if form.errors %}
+        {% for field in form %}
+        {% for error in field.errors %}
+        <p style="color: red;">{{ error }}</p>
         {% endfor %}
+        {% endfor %}
+        {% endif %}
+
         <button type="submit">Зарегистрироваться</button>
     </form>
-    <p class="auth-link">Уже есть аккаунт? <a href="{% url 'users:login' %}">Войти</a></p>
+
+    <p class="auth-link">
+        Уже есть аккаунт? <a href="{% url 'users:login' %}">Войти</a>
+    </p>
 </div>
 {% endblock %}

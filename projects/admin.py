@@ -11,4 +11,3 @@ class ProjectAdmin(admin.ModelAdmin):
     readonly_fields = ["created_at"]
 
     filter_horizontal = ["participants"]
-

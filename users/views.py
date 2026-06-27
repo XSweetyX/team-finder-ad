@@ -11,19 +11,11 @@ from utils.func_utils import get_page
 
 def register(request):
     if request.user.is_authenticated:
-        return redirect("projects:list")
-
-    
+        return redirect("projects:list")  
     form = RegistrationForm(request.POST or None)
-
-   
     if not form.is_valid():
         return render(request, "users/register.html", {"form": form})
-
-   
-    user = form.save(commit=False)
-    user.set_password(form.cleaned_data["password1"])
-    user.save()
+    user = form.save() 
     login(request, user)
     messages.success(request, "Регистрация прошла успешно!")
     return redirect("projects:list")
@@ -32,12 +24,9 @@ def register(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect("projects:list")
-
     form = LoginForm(request, data=request.POST or None)
-
     if not form.is_valid():
         return render(request, "users/login.html", {"form": form})
-
     user = form.get_user()
     login(request, user)
     messages.success(request, "Вы успешно вошли в систему!")
@@ -58,11 +47,13 @@ def user_details(request, user_id):
 
 @login_required
 def edit_profile(request):
-    form = ProfileEditForm(request.POST or None, request.FILES or None, instance=request.user)
-
+    form = ProfileEditForm(
+        request.POST or None, 
+        request.FILES or None, 
+        instance=request.user
+    )
     if not form.is_valid():
         return render(request, "users/edit_profile.html", {"form": form})
-
     form.save()
     messages.success(request, "Профиль успешно обновлен!")
     return redirect("users:details", user_id=request.user.pk)
@@ -71,10 +62,8 @@ def edit_profile(request):
 @login_required
 def change_password(request):
     form = PasswordChangeForm(request.user, request.POST or None)
-
     if not form.is_valid():
         return render(request, "users/change_password.html", {"form": form})
-
     user = form.save()
     update_session_auth_hash(request, user)
     messages.success(request, "Пароль успешно изменен!")
@@ -82,9 +71,7 @@ def change_password(request):
 
 
 def user_list(request):
-    
     participants = User.objects.filter(is_active=True)
-
     active_filter = request.GET.get("filter", "")
     query_prefix = f"filter={active_filter}&" if active_filter else ""
 
@@ -93,30 +80,24 @@ def user_list(request):
             participants = participants.filter(
                 owned_projects__in=request.user.favorites.all()
             ).distinct()
-
         elif active_filter == "owners-of-participating-projects":
             participants = participants.filter(
                 owned_projects__in=request.user.participated_projects.all()
             ).distinct()
-
         elif active_filter == "interested-in-my-projects":
             my_projects = request.user.owned_projects.all()
             participants = participants.filter(
                 favorites__in=my_projects
             ).exclude(id=request.user.id).distinct()
-
         elif active_filter == "participants-of-my-projects":
             participants = participants.filter(
                 participated_projects__in=request.user.owned_projects.all()
             ).distinct()
 
     page_obj = get_page(participants, request)
-
     context = {
         "page_obj": page_obj,
         "active_filter": active_filter,
         "query_prefix": query_prefix,
     }
-
     return render(request, "users/participants.html", context)
-

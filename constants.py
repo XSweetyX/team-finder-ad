@@ -1,27 +1,24 @@
-#utils/func_utils.py
+# utils/func_utils.py
 ITEMS_PER_PAGE = 12
 
-#projects/models.py
+# projects/models.py
 PROJECT_MODEL_NAME_MAX_LENGTH = 200
-STATUS_MAX_LENGTH = 6
 
-#users/forms.py
+# users/forms.py
 FORM_MAX_LENGTH = 124
 
-#users/models.py
-colors = [
-        (100, 149, 237), (144, 238, 144), (255, 182, 193),
-        (255, 218, 185), (221, 160, 221), (176, 224, 230),
-        (240, 230, 140), (255, 160, 122),
+# users/models.py
+COLORS = [
+    (100, 149, 237), (144, 238, 144), (255, 182, 193),
+    (255, 218, 185), (221, 160, 221), (176, 224, 230),
+    (240, 230, 140), (255, 160, 122),
 ]
 
 AVATAR_SIZE = (200, 200)
 AVATAR_MODE = "RGB"
-
 USER_MODEL_NAME_MAX_LENGTH = 124
 USER_MODEL_SURNAME_MAX_LENGTH = 124
 USER_MODEL_EMAIL_MAX_LENGTH = 254
 USER_MODEL_PHONE_NUMBER_MAX_LENGTH = 12
 USER_MODEL_ABOUT_MAX_LENGTH = 256
 FONT_SIZE = 80
-

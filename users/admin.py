@@ -28,4 +28,3 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ["is_active", "is_staff", "created_at"]
     search_fields = ["email", "name", "surname"]
     ordering = ["-created_at"]
-

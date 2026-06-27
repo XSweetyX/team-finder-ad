@@ -14,4 +14,3 @@ urlpatterns = [
     path("<int:project_id>/complete/", views.complete_project, name="complete"),
     path('<int:project_id>/toggle-participate/', views.toggle_participate, name='toggle_participate')
 ]
-
