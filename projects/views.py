@@ -78,7 +78,10 @@ def create_project(request):
 
 @login_required
 def edit_project(request, project_id):
-    project = get_object_or_404(Project, pk=project_id, owner=request.user)
+    project = get_object_or_404(Project, pk=project_id)
+    if project.owner != request.user:
+        messages.error(request, "Только автор проекта может его редактировать.")
+        return redirect("projects:list")       
     form = ProjectForm(request.POST or None, instance=project)
     if not form.is_valid():
         return render(request, "projects/create-project.html", {
@@ -93,7 +96,12 @@ def edit_project(request, project_id):
 @login_required
 @require_POST
 def complete_project(request, project_id):
-    project = get_object_or_404(Project, pk=project_id, owner=request.user)
+    project = get_object_or_404(Project, pk=project_id)
+    if project.owner != request.user:
+        return JsonResponse(
+            {"status": "error", "message": "Только автор может закрыть проект"},
+            status=HTTPStatus.FORBIDDEN,
+        )
     if project.is_open:
         project.status = project.STATUS_CLOSED
         project.save()

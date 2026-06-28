@@ -9,10 +9,6 @@ from constants import FORM_MAX_LENGTH
 
 
 class RegistrationForm(UserCreationForm):
-    name = forms.CharField(required=True, max_length=FORM_MAX_LENGTH)
-    surname = forms.CharField(required=True, max_length=FORM_MAX_LENGTH)
-    email = forms.EmailField(required=True)
-
     class Meta:
         model = User
         fields = ["name", "surname", "email", "password1", "password2"]       
@@ -48,8 +44,7 @@ class ProfileEditForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(attrs={"placeholder": "Имя"}),
             "surname": forms.TextInput(attrs={"placeholder": "Фамилия"}),
-            "avatar": forms.ClearableFileInput(),
-            "about": forms.Textarea(attrs={"rows": 3, "placeholder": "О себе"}),
+            "about": forms.Textarea(attrs={"placeholder": "О себе"}),
             "phone": forms.TextInput(attrs={"placeholder": "+7XXXXXXXXXX"}),
             "github_url": forms.URLInput(attrs={"placeholder": "https://github.com/username"}),
         }

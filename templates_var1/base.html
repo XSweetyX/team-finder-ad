@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8" />
     <title>{% block title %}TeamFinder{% endblock %}</title>
@@ -8,13 +9,22 @@
     <link rel="stylesheet" href="{% static 'css/header.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
+
 <body data-page="{% block page_id %}default{% endblock %}">
-{% include 'includes/header.html' %}
-{% block content %}{% endblock %}
-<script src="{% static 'js/utils.js' %}"></script>
-<script src="{% static 'js/share.js' %}"></script>
-<script src="{% static 'js/header.js' %}"></script>
-<script src="{% static 'js/skills.js' %}"></script>
-<script src="{% static 'js/projects.js' %}"></script>
+    {% include 'includes/header.html' %}
+    {% if messages %}
+    <div id="django-messages" hidden>
+        {% for message in messages %}
+        <span data-level="{{ message.tags }}">{{ message }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+    <script src="{% static 'js/utils.js' %}"></script>
+    <script src="{% static 'js/share.js' %}"></script>
+    <script src="{% static 'js/header.js' %}"></script>
+    <script src="{% static 'js/skills.js' %}"></script>
+    <script src="{% static 'js/projects.js' %}"></script>
 </body>
+
 </html>

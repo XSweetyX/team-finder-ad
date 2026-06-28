@@ -1,8 +1,6 @@
-// Global utilities
-(function(){
-  // CSRF cookie utility
+(function () {
   if (!window.getCookie) {
-    window.getCookie = function(name) {
+    window.getCookie = function (name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
         const cookies = document.cookie.split(";");
@@ -15,10 +13,8 @@
         }
       }
       return cookieValue;
-    }
+    };
   }
-
-  // Minimal toast notifications
   if (!window.toast) {
     function ensureContainer() {
       let c = document.getElementById('tf-toast-container');
@@ -37,11 +33,9 @@
       document.body.appendChild(c);
       return c;
     }
-
-    window.toast = function(message, opts = {}) {
+    window.toast = function (message, opts = {}) {
       const { type = 'info', duration = 2200 } = opts;
       const container = ensureContainer();
-
       const el = document.createElement('div');
       el.textContent = message;
       el.style.maxWidth = '90vw';
@@ -56,16 +50,31 @@
       el.style.textAlign = 'center';
       el.style.opacity = '0';
       el.style.transition = 'opacity 180ms ease';
-
       container.appendChild(el);
       requestAnimationFrame(() => { el.style.opacity = '1'; });
-
       setTimeout(() => {
         el.style.opacity = '0';
         setTimeout(() => {
           el.remove();
         }, 200);
       }, Math.max(1200, duration));
-    }
+    };
   }
+  document.addEventListener('DOMContentLoaded', () => {
+    const msgContainer = document.getElementById('django-messages');
+    if (!msgContainer) return;
+    const spans = msgContainer.querySelectorAll('span');
+    spans.forEach(span => {
+      const text = span.textContent.trim();
+      const level = span.dataset.level || 'info';
+      const typeMap = {
+        'error': 'error',
+        'success': 'info',
+        'warning': 'info',
+        'info': 'info'
+      };
+      window.toast(text, { type: typeMap[level] || 'info' });
+    });
+    msgContainer.remove();
+  });
 })();
